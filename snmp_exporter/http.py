@@ -29,7 +29,7 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
         self.wfile.write("Missing 'address' from parameters")
         return
       if 'port' in params:
-        snmp_port = params['address']
+        snmp_port = params['port']
       with open(self._config_path) as f:
         config = yaml.safe_load(f)
       output = collect_snmp(config, params['address'][0], snmp_port)
