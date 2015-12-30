@@ -27,8 +27,10 @@ SNMP device to get metrics from.
 By default, snmp_exporter uses port 161 to connect to SNMP devices. This can be
 overridden using either of these methods:
 
+```
 http://localhost:9116/metrics?address=1.2.3.4&port=123
 http://localhost:9116/metrics?address=1.2.3.4:123
+```
 
 ## Prometheus Configuration
 
