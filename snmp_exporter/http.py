@@ -1,3 +1,4 @@
+import easysnmp
 import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -20,7 +21,6 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
 
   def do_GET(self):
     url = urlparse.urlparse(self.path)
-    snmp_port = 161
     if url.path == '/metrics':
       params = urlparse.parse_qs(url.query)
       if 'address' not in params:
@@ -28,11 +28,24 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write("Missing 'address' from parameters")
         return
+
+      port = 161
+      address = params['address'][0]
       if 'port' in params:
-        snmp_port = params['port']
+        port = params['port'][0]
+      elif ':' in address:
+        address, port = address.split(':')
+
       with open(self._config_path) as f:
         config = yaml.safe_load(f)
-      output = collect_snmp(config, params['address'][0], snmp_port)
+      try:
+        output = collect_snmp(config, address, port)
+      except (ValueError, easysnmp.EasySNMPError) as e:
+        self.send_response(502)
+        self.end_headers()
+        self.wfile.write('Error collecting metrics from remote host: %s' % (e))
+        return
+
       self.send_response(200)
       self.send_header('Content-Type', CONTENT_TYPE_LATEST)
       self.end_headers()
@@ -44,7 +57,10 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
       <head><title>SNMP Exporter</title></head>
       <body>
       <h1>SNMP Exporter</h1>
-      <p>Visit <code>/metrics?address=1.2.3.4</code> to use.</p>
+      <p>Usage:<br>
+      <code>/metrics?address=1.2.3.4</code><br>
+      <code>/metrics?address=1.2.3.4&port=123</code><br>
+      <code>/metrics?address=1.2.3.4:123</code></p>
       </body>
       </html>""")
     else:
