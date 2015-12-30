@@ -4,6 +4,7 @@ import time
 from pysnmp.entity.rfc3413.oneliner import cmdgen
 from prometheus_client import Metric, CollectorRegistry, generate_latest, Gauge
 
+
 def walk_oids(host, port, oids, community):
   cmdGen = cmdgen.CommandGenerator()
   errorIndication, errorStatus, errorIndex, varBindTable = cmdGen.bulkCmd(

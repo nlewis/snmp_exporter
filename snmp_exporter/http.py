@@ -6,12 +6,12 @@ from SocketServer import ForkingMixIn
 import yaml
 from prometheus_client import CONTENT_TYPE_LATEST
 
-
 from collector import collect_snmp
 
 
 class ForkingHTTPServer(ForkingMixIn, HTTPServer):
   pass
+
 
 class SnmpExporterHandler(BaseHTTPRequestHandler):
   def __init__(self, config_path, *args, **kwargs):
@@ -48,8 +48,8 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
       self.send_response(404)
       self.end_headers()
 
+
 def start_http_server(config_path, port):
   handler = lambda *args, **kwargs: SnmpExporterHandler(config_path, *args, **kwargs)
   server = ForkingHTTPServer(('', port), handler)
   server.serve_forever()
-
