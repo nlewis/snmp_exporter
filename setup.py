@@ -14,7 +14,13 @@ setup(
     scripts = ["scripts/snmp_exporter"],
     packages=['snmp_exporter'],
     test_suite="tests",
-    install_requires=["prometheus_client>=0.0.11", "pyyaml", "easysnmp>=0.2.4"],
+    install_requires=[
+        "easysnmp>=0.2.4",
+        "google-apputils",
+        "prometheus_client>=0.0.11",
+        "python-gflags",
+        "pyyaml",
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Information Technology",

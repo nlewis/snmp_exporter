@@ -1,4 +1,5 @@
 import easysnmp
+import logging
 import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -8,6 +9,8 @@ import yaml
 from prometheus_client import CONTENT_TYPE_LATEST
 
 from collector import collect_snmp
+
+logger = logging.getLogger()
 
 
 class ForkingHTTPServer(ForkingMixIn, HTTPServer):
@@ -19,6 +22,10 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
     self._config_path = config_path
     BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 
+  def log_message(self, format, *args):
+    client = '%s:%s' % (self.client_address[0], self.client_address[1])
+    logger.info('%s - %s', client, format % args)
+
   def do_GET(self):
     url = urlparse.urlparse(self.path)
     if url.path == '/metrics':
@@ -26,7 +33,9 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
       if 'address' not in params:
         self.send_response(400)
         self.end_headers()
-        self.wfile.write("Missing 'address' from parameters")
+        msg = 'Missing "address" from parameters.'
+        self.log_message(msg)
+        self.wfile.write(msg)
         return
 
       port = 161
@@ -43,7 +52,9 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
       except (ValueError, easysnmp.EasySNMPError) as e:
         self.send_response(502)
         self.end_headers()
-        self.wfile.write('Error collecting metrics from remote host: %s' % (e))
+        msg = 'Error collecting metrics from remote host: %s' % (e)
+        self.log_message(msg)
+        self.wfile.write(msg)
         return
 
       self.send_response(200)
@@ -71,4 +82,6 @@ class SnmpExporterHandler(BaseHTTPRequestHandler):
 def start_http_server(config_path, port):
   handler = lambda *args, **kwargs: SnmpExporterHandler(config_path, *args, **kwargs)
   server = ForkingHTTPServer(('', port), handler)
+
+  logger.info('Starting HTTP server.')
   server.serve_forever()
